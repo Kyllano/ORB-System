@@ -1,80 +1,71 @@
 use std::fs;
 
-/*
-#[derive(Debug)]
-enum Node<'a> {
-    File(&'a str),
-    Directory(&'a str, Vec<Node<'a>>),
-}
-
-impl<'a> Node <'a> {
-    fn new_file(filename: &'a str) -> Self {
-        Node::File(filename)
-    }
-    
-    fn new_empty_directory(directoryname :&'a str, children: Vec<Node<'a>>) -> Self {
-        Node::Directory(directoryname, children)
-    }
-    
-    fn get_children(&self) -> &Vec<Node<'a>> {
-        match self {
-            Node::Directory(_,_) => {
-                self.children
-            }
-            Node::File(_,_) => {
-                None
-            }
-        }
-    }
-}
-*/
-enum FileSystem <'a> {
-    Directory(Directory<'a>),
-    File(File<'a>)
+struct File <'a> {
+    name : &'a str,
+    data : Vec<u8>
 }
 
 struct Directory <'a>{
     name : &'a str,
-    children : Vec<FileSystem<'a>>
+    children_directory : Vec<Directory<'a>>,
+    children_file : Vec<File<'a>>
 }
 
-struct File <'a> {
-    name : &'a str
-}
+impl<'a> File<'a>{
+    fn new_empty(file_name: &'a str) -> Self{
+        File { name: file_name , data: Vec::new()}
+    }
 
-trait Name {
-    fn name(&self) -> &str;
-}
-
-trait Parent {
-    fn get_children(&self) -> &Vec<FileSystem>;
-}
-
-impl<'a> Name for Directory<'a> {
-    fn name(&self) -> &str {
-        self.name
+    fn new(file_name: &'a str, data: Vec<u8>) -> Self{
+        File { name: file_name, data: data }
     }
 }
 
-impl<'a> Name for File<'a> {
-    fn name(&self) -> &str {
-        self.name
+impl<'a> Directory<'a>{
+    fn new_empty(directory_name : &'a str) -> Self {
+        Directory { name: directory_name, children_directory: Vec::new(), children_file: Vec::new() }
+    }
+
+    fn add_directory(&mut self, directory : Directory<'a>){
+        self.children_directory.push(directory)
+    }
+
+    fn add_file(&mut self, file : File<'a>){
+        self.children_file.push(file)
+    }
+
+    fn print_arch(&self, indent_lvl : usize){
+        println!("{}└ {}", "  ".repeat(indent_lvl), self.name);
+        for child in &self.children_directory{
+            println!("{}└ {}", "  ".repeat(indent_lvl+1), child.name);
+        }
+        for child in &self.children_file{
+            println!("{}└ {}", "  ".repeat(indent_lvl+1), child.name);
+        }
+    }
+
+    fn print_arch_rec(&self, indent_lvl : usize){
+        println!("{}└ {}", "  ".repeat(indent_lvl), self.name);
+        for child in &self.children_directory{
+            child.print_arch_rec(indent_lvl+1);
+        }
+        for child in &self.children_file{
+            println!("{}└ {}", "  ".repeat(indent_lvl+1), child.name);
+        }
     }
 }
-
-impl<'a> Parent for Directory<'a> {
-    fn get_children(&self) -> &Vec<FileSystem<'a>> {
-        &self.children
-    }
-}
-
 
 fn main() {
-    /*
+    
     let data = fs::read("../README.md").expect("Unable to open file");
-    println!("{}", data.len());
-    let data = String::from_utf8(data).expect("Couldn't parse UTF 8");
-    println!("{data}");
-    */
+    
+
+    let mut root = Directory::new_empty("root");
+    root.add_directory(Directory::new_empty("subfolder"));
+    root.add_file(File::new("lol", data));
+    root.add_file(File::new_empty("prout"));
+    root.children_directory[0].add_file(File::new_empty("homework"));
+
+    root.print_arch_rec(0);
     
 }

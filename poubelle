@@ -1,0 +1,27 @@
+impl<'a> FileSystem<'a> {
+    fn is_directory(&self) -> bool {
+        match self {
+            FileSystem::Directory(_) => true,
+            FileSystem::File(_) => false,
+        }
+    }
+}
+
+enum FileSystem <'a> {
+    Directory(Directory<'a>),
+    File(File<'a>)
+}
+
+trait Parent <'a>{
+    fn get_children(&self) -> &Vec<FileSystem<'a>>;
+    fn get_children_mut(&mut self) -> &mut Vec<FileSystem<'a>>;
+}
+
+impl<'a> Parent<'a> for Directory<'a> {
+    fn get_children(&self) -> &Vec<FileSystem<'a>> {
+        &self.children
+    }
+    fn get_children_mut(&mut self)-> &mut Vec<FileSystem<'a>>{
+        &mut self.children
+    }
+}
