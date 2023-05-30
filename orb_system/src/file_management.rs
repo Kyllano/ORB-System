@@ -23,7 +23,7 @@ impl File{
         File { path : path.to_owned(), data: data }
     }
 
-    pub fn get_file_name(&self) -> &str {
+    pub fn get_name(&self) -> &str {
         self.path.split('/').last().expect("Couldn't get the name of the file")
     }
 
@@ -43,6 +43,10 @@ impl File{
 impl Directory{
     pub fn new_empty(path : &str) -> Self {
         Directory { path : path.to_owned(), children_directory: Vec::new(), children_file: Vec::new() }
+    }
+
+    pub fn get_name(&self) -> &str {
+        self.path.split('/').last().expect("Couldn't get the name of the directory")
     }
 
     pub fn add_directory(&mut self, directory : Directory){
@@ -109,16 +113,10 @@ impl Directory{
 
         println!("{}└ {}", "  ".repeat(indent_lvl), &name);
         for child in &self.children_directory{
-            println!("{}└ {}", "  ".repeat(indent_lvl+1), child.path
-                                                        .split('/')
-                                                        .last()
-                                                        .expect("Couldn't get the name of the folder"));
+            println!("{}└ {}", "  ".repeat(indent_lvl+1), child.get_name());
         }
         for child in &self.children_file{
-            println!("{}└ {}", "  ".repeat(indent_lvl+1), child.path
-                                                        .split('/')
-                                                        .last()
-                                                        .expect("Couldn't get the name of the file"));
+            println!("{}└ {}", "  ".repeat(indent_lvl+1), child.get_name());
         }
     }
 
@@ -127,18 +125,12 @@ impl Directory{
     }
 
     fn print_arch_rec(&self, indent_lvl : usize){;
-        println!("{}└ {}", "  ".repeat(indent_lvl), self.path
-                                                    .split('/')
-                                                    .last()
-                                                    .expect("Couldn't get the name of the folder"));
+        println!("{}└ {}", "  ".repeat(indent_lvl), self.get_name());
         for child in &self.children_directory{
             child.print_arch_rec(indent_lvl+1);
         }
         for child in &self.children_file{
-            println!("{}└ {}", "  ".repeat(indent_lvl+1), child.path
-                                                        .split('/')
-                                                        .last()
-                                                        .expect("Couldn't get the name of the file"));
+            println!("{}└ {}", "  ".repeat(indent_lvl+1), child.get_name());
         }
     }
 }
