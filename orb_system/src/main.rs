@@ -5,8 +5,10 @@ use file_management::File;
 
 
 fn main() {
-    _test_arch();
-    
+    //_test_arch();
+    let mut root : Directory = Directory::new_empty("./test");
+    root.explore_hierarchy();
+    //root.print_arch();
 }
 
 

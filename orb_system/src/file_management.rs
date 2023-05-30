@@ -3,24 +3,24 @@ use std::fs::{self, FileType};
 
 
 
-pub struct File <'a> {
-    pub path : &'a str,
+pub struct File {
+    pub path : String,
     pub data : Vec<u8>
 }
 
-pub struct Directory <'a>{
-    pub path : &'a str,
-    pub children_directory : Vec<Directory<'a>>,
-    pub children_file : Vec<File<'a>>
+pub struct Directory{
+    pub path : String,
+    pub children_directory : Vec<Directory>,
+    pub children_file : Vec<File>
 }
 
-impl<'a> File<'a>{
-    pub fn new_empty(path: &'a str) -> Self{
-        File { path : path, data: Vec::new()}
+impl File{
+    pub fn new_empty(path: &str) -> Self{
+        File { path : path.to_owned(), data: Vec::new()}
     }
 
-    pub fn new(path : &'a str, data: Vec<u8>) -> Self{
-        File { path : path, data: data }
+    pub fn new(path : &str, data: Vec<u8>) -> Self{
+        File { path : path.to_owned(), data: data }
     }
 
     pub fn print_file_content_as_str(&self){
@@ -32,21 +32,29 @@ impl<'a> File<'a>{
     }
 }
 
-impl<'a> Directory<'a>{
-    pub fn new_empty(path : &'a str) -> Self {
-        Directory { path : path.clone(), children_directory: Vec::new(), children_file: Vec::new() }
+impl Directory{
+    pub fn new_empty(path : &str) -> Self {
+        Directory { path : path.to_owned(), children_directory: Vec::new(), children_file: Vec::new() }
     }
 
-    pub fn add_directory(&mut self, directory : Directory<'a>){
+    pub fn add_directory(&mut self, directory : Directory){
         self.children_directory.push(directory)
     }
 
-    pub fn add_file(&mut self, file : File<'a>){
+    pub fn add_file(&mut self, file : File){
         self.children_file.push(file)
     }
 
     pub fn explore_hierarchy(&mut self){
-        match fs::read_dir(self.path){
+        //On vide d'abord les fichiers et dossiers dans le dossier
+        for _ in 0..self.children_directory.len() {
+            self.children_directory.pop();
+        }
+        for _ in 0..self.children_file.len() {
+            self.children_file.pop();
+        }
+
+        match fs::read_dir(&self.path){
             Ok(entries) => {
                 for entry in entries {
                     match entry {
@@ -55,12 +63,18 @@ impl<'a> Directory<'a>{
                                                         .file_type()
                                                         .expect("Error getting filetype");
                             if file_type.is_dir() {
-                                let dir_path = valid_entry.path();
-                                let path_str : &str = dir_path.to_str().expect("prout");
-                                self.add_directory(Directory::new_empty(path_str));
+                                let mut dir : Directory = Directory::new_empty(valid_entry
+                                                                            .path()
+                                                                            .to_str()
+                                                                            .expect("Error getting path"));
+                                dir.explore_hierarchy();
+                                self.add_directory(dir)
                             }
                             else if file_type.is_file() {
-                                println!("prout");
+                                self.add_file(File::new_empty(valid_entry
+                                                                .path()
+                                                                .to_str()
+                                                                .expect("Error getting path")));
                             }
                             else {
                                 println!("File type for {} is not supported", valid_entry
@@ -87,14 +101,16 @@ impl<'a> Directory<'a>{
 
         println!("{}└ {}", "  ".repeat(indent_lvl), &name);
         for child in &self.children_directory{
-            let path_split_child_dir: Vec<&str> = child.path.split('/').collect();
-            let name_child_dir = path_split_child_dir[path_split.len()-1];
-            println!("{}└ {}", "  ".repeat(indent_lvl+1), &name_child_dir);
+            println!("{}└ {}", "  ".repeat(indent_lvl+1), child.path
+                                                        .split('/')
+                                                        .last()
+                                                        .expect("Couldn't get the name of the folder"));
         }
         for child in &self.children_file{
-            let path_split_child_file: Vec<&str> = child.path.split('/').collect();
-            let name_child_file = path_split_child_file[path_split.len()-1];
-            println!("{}└ {}", "  ".repeat(indent_lvl+1), &name_child_file);
+            println!("{}└ {}", "  ".repeat(indent_lvl+1), child.path
+                                                        .split('/')
+                                                        .last()
+                                                        .expect("Couldn't get the name of the file"));
         }
     }
 
@@ -102,18 +118,19 @@ impl<'a> Directory<'a>{
         self.print_arch_rec(0);
     }
 
-    fn print_arch_rec(&self, indent_lvl : usize){
-        let path_split: Vec<&str> = self.path.split('/').collect();
-        let name = path_split[path_split.len()-1];
-
-        println!("{}└ {}", "  ".repeat(indent_lvl), &name);
+    fn print_arch_rec(&self, indent_lvl : usize){;
+        println!("{}└ {}", "  ".repeat(indent_lvl), self.path
+                                                    .split('/')
+                                                    .last()
+                                                    .expect("Couldn't get the name of the folder"));
         for child in &self.children_directory{
             child.print_arch_rec(indent_lvl+1);
         }
         for child in &self.children_file{
-            let path_split_child_file: Vec<&str> = child.path.split('/').collect();
-            let name_child_file = path_split[path_split.len()-1];
-            println!("{}└ {}", "  ".repeat(indent_lvl+1), name_child_file);
+            println!("{}└ {}", "  ".repeat(indent_lvl+1), child.path
+                                                        .split('/')
+                                                        .last()
+                                                        .expect("Couldn't get the name of the file"));
         }
     }
 }
