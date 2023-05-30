@@ -23,12 +23,20 @@ impl File{
         File { path : path.to_owned(), data: data }
     }
 
+    pub fn get_file_name(&self) -> &str {
+        self.path.split('/').last().expect("Couldn't get the name of the file")
+    }
+
     pub fn print_file_content_as_str(&self){
         println!("{}", String::from_utf8_lossy(&self.data));
     }
 
-    pub fn read_data_from_file(&mut self, path_to_file : &str){
-        self.data = std::fs::read(path_to_file).expect("Unable to open file");
+    pub fn read_data_from_file(&mut self){
+        self.data = std::fs::read(&self.path).expect("Unable to open file");
+    }
+
+    pub fn empty_data_of_file(&mut self){
+        self.data.clear();
     }
 }
 
@@ -95,7 +103,7 @@ impl Directory{
         }
     }
 
-    pub fn _print_dir(&self, indent_lvl : usize){
+    pub fn print_dir(&self, indent_lvl : usize){
         let path_split: Vec<&str> = self.path.split('/').collect();
         let name = path_split[path_split.len()-1];
 
