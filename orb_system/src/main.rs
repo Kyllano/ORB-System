@@ -9,9 +9,9 @@ fn main() {
     let mut root : Directory = Directory::new_empty("../test");
     root.explore_hierarchy();
     
-    for file in &mut root.children_file {
-        println!("Content of {}", file.path);
-        file.read_data_from_file();
-        file.print_file_content_as_str();
-    }
+    let prout = root.children_file[0].serialize();
+
+    let hiiii : File = File::deserialize(prout);
+    println!("{}", hiiii.path);
+    hiiii.print_file_content_as_str();
 }
