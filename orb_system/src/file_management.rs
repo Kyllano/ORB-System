@@ -64,11 +64,11 @@ impl File{
         binary_file
     }
 
-    pub fn deserialize(binary : &Vec<u8>) -> Result<File, &'static str> {
+    pub fn deserialize(binary : &Vec<u8>) -> Result<File, String> {
         Self::deserialize_f(binary, 0)
     }
 
-    fn deserialize_f(binary : &Vec<u8>, offset_f : usize) -> Result<File, &'static str> {
+    fn deserialize_f(binary : &Vec<u8>, offset_f : usize) -> Result<File, String> {
         let mut offset : usize = offset_f;
 
         //On récupère la taille du path
@@ -77,7 +77,7 @@ impl File{
 
         //On récupère le path
         if binary.len() < offset + len_path{
-            return Err("Path sized written in binary is incorrect");
+            return Err(String::from("Path sized written in binary is incorrect"));
         }
         let mut path_bytes : Vec<u8> = Vec::new();
         for i in offset..offset + len_path {
@@ -92,7 +92,7 @@ impl File{
 
         //On récupère la data
         if binary.len() < offset + len_data{
-            return Err("File size written in binary is incorrect");
+            return Err(String::from("File size written in binary is incorrect"));
         }
         let mut data : Vec<u8> = Vec::new();
         for i in offset..offset + len_data {
@@ -205,11 +205,11 @@ impl Directory{
         binary_file
     }
 
-    pub fn deserialize(binary : &Vec<u8>) -> Result<Directory, &'static str>{
+    pub fn deserialize(binary : &Vec<u8>) -> Result<Directory, String>{
         Directory::deserialize_d(binary, 0)
     }
 
-    fn deserialize_d(binary : &Vec<u8>, offset_f : usize) -> Result<Directory, &'static str>{
+    fn deserialize_d(binary : &Vec<u8>, offset_f : usize) -> Result<Directory, String>{
         let mut offset : usize = offset_f;
 
         //On récupère la taille du path
@@ -218,7 +218,7 @@ impl Directory{
 
         //On récupère le path
         if binary.len() < offset + len_path{
-            return Err("Path sized written in binary is incorrect");
+            return Err(String::from("Path sized written in binary is incorrect"));
         }
         let mut path_bytes : Vec<u8> = Vec::new();
         for i in offset..offset + len_path {
@@ -271,6 +271,22 @@ impl Directory{
         offset
     }
 
+    pub fn write_binary(&mut self, path : &str){
+        let binary = self.serialize();
+    
+        match fs::write(path, binary){
+            Ok(_) => println!("File written to {}", path),
+            Err(error) => println!("Couldn' write file : {}", error)
+        };
+    }
+
+    pub fn read_binary(path : &str) -> Result<Self, String>{
+        match fs::read(path) {
+            Ok(result) => return Self::deserialize(&result),
+            Err(err) => return Err(format!("Couldn't read the file : {}", err))
+        }
+    }
+
     pub fn print_dir(&self, indent_lvl : usize){
         let path_split: Vec<&str> = self.path.split('/').collect();
         let name = path_split[path_split.len()-1];
@@ -299,11 +315,17 @@ impl Directory{
     }
 }
 
-fn deserialize_u64(binary : &Vec<u8>, offset : &usize) -> Result<u64, &'static str> {
+fn deserialize_u64(binary : &Vec<u8>, offset : &usize) -> Result<u64, String> {
     if binary.len() < offset+8{
-        return Err("binary is too small to have a u64 at this offset location");
+        return Err(String::from("binary is too small to have a u64 at this offset location"));
     }
     let mut num : [u8;8] = [0;8];
     num.copy_from_slice(&binary[*offset..*offset+8]);
     Ok(u64::from_le_bytes(num))
+}
+
+
+
+pub fn restore_arch(path : String, dir : Directory) {
+
 }
